@@ -2,6 +2,8 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { user } from "./routers/user";
 
+export const prisma = new PrismaClient()
+
 dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 8000;
