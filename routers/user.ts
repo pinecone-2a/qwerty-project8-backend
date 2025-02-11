@@ -1,4 +1,3 @@
-
 import {Request, Response, Router,NextFunction } from "express";
 import { prisma } from "../";
 const findOne=async (req:Request,res:Response)=>{
