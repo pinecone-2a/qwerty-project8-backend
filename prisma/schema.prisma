@@ -33,7 +33,6 @@ model User {
   username String
   receivedDonations Donation[] @relation("Donor")
   sendDonations Donation[] @relation("Recipient")
-  
   profile Profile?
   bankCard BankCard?
   createdAt DateTime @default(now())
