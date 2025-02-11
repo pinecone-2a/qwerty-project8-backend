@@ -1,13 +1,9 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { user } from "./routers/user";
-<<<<<<< HEAD
-const { PrismaClient } = require('@prisma/client');
-=======
 import { bankcard } from "./routers/bankcard";
 import { profile } from "./routers/profile";
 const { PrismaClient } = require("@prisma/client");
->>>>>>> main
 
 export const prisma = new PrismaClient();
 
