@@ -14,55 +14,56 @@ datasource db {
 }
 
 model BankCard {
-  id Int @id @default(autoincrement())
-  country String
-  firstName String
-  lastName String
-  cardNumber String
-  expiryDate DateTime 
-  user User @relation(fields: [userId], references: [id])
-  userId Int @unique
-  createdAt DateTime @default(now())
-  updatedAt  DateTime   @updatedAt
+  id          Int       @id @default(autoincrement())
+  country     String
+  firstName   String
+  lastName    String
+  cardNumber  String
+  expiryDate  DateTime 
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int       @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  email String @unique
-  password String
-  username String
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  password          String
+  username          String
   receivedDonations Donation[] @relation("Donor")
-  sendDonations Donation[] @relation("Recipient")
+  sendDonations     Donation[] @relation("Recipient")
   
-  profile Profile?
-  bankCard BankCard?
-  createdAt DateTime @default(now())
-  updatedAt  DateTime   @updatedAt
+  profile   Profile?
+  bankCard  BankCard?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Donation{
-  id Int @id @default(autoincrement())
-  amount Int
-  specialMessage String
-  socialURLOrBuyMeACoffee String
-  donor User @relation("Donor",fields: [donorId], references: [id])
-  donorId Int 
-  recipient User @relation("Recipient",fields: [recipientId], references: [id])
-  recipientId Int
-  createdAt DateTime @default(now())
-  updatedAt  DateTime   @updatedAt
+  id                      Int      @id @default(autoincrement())
+  amount                  Int
+  specialMessage          String?
+  socialURLOrBuyMeACoffee String?
+  donorId                 Int
+  recipientId             Int
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  donor     User @relation(fields: [donorId], references: [id])
+  recipient User @relation(fields: [recipientId], references: [id])
 }
 
 model Profile{
-  id Int @id @default(autoincrement())
-  name String
-  about String
-  avatarImage String
-  socialMediaURL String
+  id              Int       @id @default(autoincrement())
+  name            String
+  about           String
+  avatarImage     String
+  socialMediaURL  String
   backgroundImage String
-  successMessage String
-  user User @relation(fields: [userId], references: [id])
-  userId Int @unique
-  createdAt DateTime @default(now())
-  updatedAt  DateTime   @updatedAt
+  successMessage  String
+  user            User      @relation(fields: [userId], references: [id])
+  userId          Int       @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
