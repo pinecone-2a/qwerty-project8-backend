@@ -5,6 +5,7 @@ export const bankcard = Router();
 
 // POST route to create a bank card
 bankcard.post("/", async (req: Request, res: Response) => {
+  console.log(req.body);
   const create = await prisma.bankCard.create({
     data: req.body,
   });
