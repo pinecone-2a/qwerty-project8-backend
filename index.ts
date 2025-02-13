@@ -2,6 +2,8 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { user } from "./routers/user";
 import { donations } from "./routers/donation";
+import { bankcard } from "./routers/bankcard";
+import { profile } from "./routers/profile";
 const { PrismaClient } = require("@prisma/client");
 
 export const prisma = new PrismaClient();
@@ -13,8 +15,7 @@ const cors = require("cors");
 app.use(cors());
 app.use(express.json());
 
-app.use("/user/", user);
-app.use("/donations", donations);
+app.use("/auth", user);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
