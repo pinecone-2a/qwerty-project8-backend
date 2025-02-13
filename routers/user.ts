@@ -1,5 +1,4 @@
 import {Request, Response, Router,NextFunction } from "express";
-
 import { prisma } from "../";
 import nodemailer from "nodemailer"
 // import bcrypt from "bcryptjs"
@@ -86,12 +85,12 @@ const isValid=bcrypt.compareSync(password, isUserExist.password);
                     code:"password incorrect",
                     data:null
             })
+
   };
 const fetchUsers = async (req: Request, res: Response) => {
 const users = await prisma.user.findMany({});
 res.json(users);
 };
-
 
 // forget password
 
