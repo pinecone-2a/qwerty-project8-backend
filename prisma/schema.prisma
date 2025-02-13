@@ -41,17 +41,17 @@ model User {
 }
 
 model Donation{
-  id                      Int      @id @default(autoincrement())
+  id                      Int     @id @default(autoincrement())
   amount                  Int
-  specialMessage          String?
-  socialURLOrBuyMeACoffee String?
-  donorId                 Int
+  specialMessage          String
+  socialURLOrBuyMeACoffee String
+  donorId                 Int 
   recipientId             Int
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  donor     User @relation(fields: [donorId], references: [id])
-  recipient User @relation(fields: [recipientId], references: [id])
+  recipient  User @relation("Recipient", fields: [recipientId], references: [id])
+  donor      User @relation("Donor",     fields: [donorId],     references: [id])
 }
 
 model Profile{
