@@ -31,24 +31,23 @@ const signUpController=async(req:Request,res:Response)=>{
         }
     });
     if(isUserExist){
-res.status(202).json({
-    success:false,
-    message:"User already exists",
-    data:null
-});return
+        res.status(202).json({
+            success:false,
+            message:"User already exists",
+            data:null
+        });return
     }
     // const salt=process.env.Salt
-const hashedPass=bcrypt.hashSync(password,10)
-
+    const hashedPass=bcrypt.hashSync(password,10);
     const result=await prisma.user.create({
         data:{
             email:email,
             password: hashedPass,
             username: username,
         }
-    });res.status(202).json({
-        success:true
-        ,
+    });
+    res.status(202).json({
+        success:true,
         message:"signed up",
         data:result
     })
