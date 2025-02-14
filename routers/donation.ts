@@ -1,106 +1,98 @@
-import { Request, Response, Router, NextFunction } from "express";
-import { prisma } from "..";
-const express = require("express");
+import { Router, Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+export const donationRouter = Router();
 
-export const donations = express();
-donations.use(express.json());
+donationRouter.post("/create-donation", async (req: Request, res: Response) => {
+  const {
+    amount,
+    specialMessage,
+    socialURLOrBuyMeACoffee,
+    donorId,
+    recipientId,
+  } = req.body;
 
-donations.post(
-  "/donations",
-  async (
-    req: { body: any },
-    res: {
-      status: (arg0: number) => {
-        (): any;
-        new (): any;
-        json: { (arg0: { error: any }): void; new (): any };
-      };
-    }
-  ) => {
+  try {
     const donation = await prisma.donation.create({
-      data: req.body,
+      data: {
+        amount,
+        specialMessage,
+        socialURLOrBuyMeACoffee,
+        donorId,
+        recipientId,
+      },
     });
-    res.status(201).json(donation);
+
+    res.json(donation);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "ERROR" });
+  }
+});
+
+donationRouter.get(
+  "/donation/received/:userId",
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    try {
+      const donations = await prisma.donation.findMany({
+        where: { recipientId: userId },
+        orderBy: { createdAt: "desc" },
+      });
+
+      res.json(donations);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "ERROR" });
+    }
   }
 );
 
-donations.get(
-  "/donations",
-  async (
-    req: any,
-    res: {
-      status: (arg0: number) => {
-        (): any;
-        new (): any;
-        json: { (arg0: { error: any }): void; new (): any };
-      };
+donationRouter.get(
+  "/total-earnings/:userId",
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    try {
+      const today = new Date();
+      const last30Days = new Date();
+      last30Days.setDate(today.getDate() - 30);
+
+      const donations = await prisma.donation.findMany({
+        where: {
+          recipientId: userId,
+          createdAt: { gte: last30Days },
+        },
+      });
+
+      const totalEarnings = donations.reduce(
+        (sum, donation) => sum + donation.amount,
+        0
+      );
+
+      res.json({ earnings: totalEarnings });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "ERROR" });
     }
-  ) => {
-    const donations = await prisma.donation.findMany({
-      include: { donor: true, recipient: true },
-    });
-    res.status(200).json(donations);
   }
 );
 
-donations.get(
-  "/donations/:id",
-  async (
-    req: { params: { id: string } },
-    res: {
-      status: (arg0: number) => {
-        (): any;
-        new (): any;
-        json: { (arg0: { message?: string; error?: any }): void; new (): any };
-      };
-    }
-  ) => {
-    const donation = await prisma.donation.findUnique({
-      where: { id: parseInt(req.params.id) },
-      include: { donor: true, recipient: true },
-    });
-    donation
-      ? res.status(200).json(donation)
-      : res.status(404).json({ message: "Donation not found" });
-  }
-);
+donationRouter.get("/:userId", async (req: Request, res: Response) => {
+  const { userId } = req.params;
 
-donations.put(
-  "/donations/:id",
-  async (
-    req: { params: { id: string }; body: any },
-    res: {
-      status: (arg0: number) => {
-        (): any;
-        new (): any;
-        json: { (arg0: { error: string }): void; new (): any };
-      };
-    }
-  ) => {
-    const updatedDonation = await prisma.donation.update({
-      where: { id: parseInt(req.params.id) },
-      data: req.body,
+  try {
+    const sentDonations = await prisma.donation.findMany({
+      where: { donorId: userId },
+      orderBy: { createdAt: "desc" },
     });
-    res.status(200).json(updatedDonation);
-  }
-);
 
-donations.delete(
-  "/donations/:id",
-  async (
-    req: { params: { id: string } },
-    res: {
-      status: (arg0: number) => {
-        (): any;
-        new (): any;
-        send: { (): void; new (): any };
-        json: { (arg0: { error: string }): void; new (): any };
-      };
-    }
-  ) => {
-    await prisma.donation.delete({
-      where: { id: parseInt(req.params.id) },
-    });
-    res.status(204).send();
+    res.json(sentDonations);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "ERROR" });
   }
-);
+});
+
+export default donationRouter;
