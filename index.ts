@@ -17,6 +17,7 @@ app.use(express.json());
 app.use("/user/", user);
 app.use("/bankcard", bankcard);
 app.use("/profile", profile);
+app.use("/auth", user);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
