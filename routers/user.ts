@@ -17,10 +17,13 @@ const bcrypt = require('bcrypt');
 // const myPlaintextPassword = 's0/\/\P4$$w0rD';
 // const someOtherPlaintextPassword = 'not_bacon';
 
-const findOne=async (req:Request,res:Response)=>{
-    const oneUser=await prisma.user.findFirst()
-
+const findOne = async (req:Request,res:Response)=>{
+ try{
+    const oneUser = await prisma.user.findFirst();
     res.json(oneUser)
+ } catch(e){
+    throw new Error("Error")
+ }
 }
 const signUpController=async(req:Request,res:Response)=>{
     const { email, password, username } = req.body;
@@ -45,6 +48,7 @@ const signUpController=async(req:Request,res:Response)=>{
             username: username,
         }
     });
+    console.log(result);
     res.status(202).json({
         success:true,
         message:"signed up",
