@@ -12,18 +12,6 @@ const transporter = nodemailer.createTransport({
     },
   });
 const bcrypt = require('bcrypt');
-// const saltRounds = 10;
-// const myPlaintextPassword = 's0/\/\P4$$w0rD';
-// const someOtherPlaintextPassword = 'not_bacon';
-
-const findOne=async (req:Request,res:Response)=>{
-    const oneUser=await prisma.user.findFirst()
-
-const bcrypt = require('bcrypt');
-// const saltRounds = 10;
-// const myPlaintextPassword = 's0/\/\P4$$w0rD';
-// const someOtherPlaintextPassword = 'not_bacon';
-
 const findOne = async (req:Request,res:Response)=>{
  try{
     const oneUser = await prisma.user.findFirst();
