@@ -11,7 +11,6 @@ const transporter = nodemailer.createTransport({
       pass: "psur zhse xaqp aquu",
     },
   });
-
 const bcrypt = require('bcrypt');
 // const saltRounds = 10;
 // const myPlaintextPassword = 's0/\/\P4$$w0rD';
@@ -20,7 +19,18 @@ const bcrypt = require('bcrypt');
 const findOne=async (req:Request,res:Response)=>{
     const oneUser=await prisma.user.findFirst()
 
+const bcrypt = require('bcrypt');
+// const saltRounds = 10;
+// const myPlaintextPassword = 's0/\/\P4$$w0rD';
+// const someOtherPlaintextPassword = 'not_bacon';
+
+const findOne = async (req:Request,res:Response)=>{
+ try{
+    const oneUser = await prisma.user.findFirst();
     res.json(oneUser)
+ } catch(e){
+    throw new Error("Error")
+ }
 }
 const signUpController=async(req:Request,res:Response)=>{
     const { email, password, username } = req.body;
@@ -38,7 +48,6 @@ res.status(202).json({
     }
     // const salt=process.env.Salt
 const hashedPass=bcrypt.hashSync(password,10)
-
     const result=await prisma.user.create({
         data:{
             email:email,
@@ -46,8 +55,7 @@ const hashedPass=bcrypt.hashSync(password,10)
             username: username,
         }
     });res.status(202).json({
-        success:true
-        ,
+        success:true,
         message:"signed up",
         data:result
     })
