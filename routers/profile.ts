@@ -4,6 +4,7 @@ import { prisma } from "..";
 export const profile = Router();
 
 profile.post("/", async (req: Request, res: Response) => {
+  req.body.userId = Number(req.body.userId);
   const create = await prisma.profile.create({
     data: req.body,
   });
