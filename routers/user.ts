@@ -11,16 +11,14 @@ const transporter = nodemailer.createTransport({
       pass: "psur zhse xaqp aquu",
     },
   });
-
 const bcrypt = require('bcrypt');
-// const saltRounds = 10;
-// const myPlaintextPassword = 's0/\/\P4$$w0rD';
-// const someOtherPlaintextPassword = 'not_bacon';
-
-const findOne=async (req:Request,res:Response)=>{
-    const oneUser=await prisma.user.findFirst()
-
+const findOne = async (req:Request,res:Response)=>{
+ try{
+    const oneUser = await prisma.user.findFirst();
     res.json(oneUser)
+ } catch(e){
+    throw new Error("Error")
+ }
 }
 const signUpController=async(req:Request,res:Response)=>{
     const { email, password, username } = req.body;
@@ -30,22 +28,21 @@ const signUpController=async(req:Request,res:Response)=>{
         }
     });
     if(isUserExist){
-        res.status(202).json({
-            success:false,
-            message:"User already exists",
-            data:null
-        });return
+res.status(202).json({
+    success:false,
+    message:"User already exists",
+    data:null
+});return
     }
     // const salt=process.env.Salt
-    const hashedPass=bcrypt.hashSync(password,10);
+const hashedPass=bcrypt.hashSync(password,10)
     const result=await prisma.user.create({
         data:{
             email:email,
             password: hashedPass,
             username: username,
         }
-    });
-    res.status(202).json({
+    });res.status(202).json({
         success:true,
         message:"signed up",
         data:result
