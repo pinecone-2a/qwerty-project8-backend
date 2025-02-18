@@ -94,7 +94,8 @@ res.json(users);
 // forget password
 
 const forgetPassword=async(req:Request,res:Response)=>{
-    const { email, otp, } = req.body;
+    const { email } = req.body;
+
     const user = await prisma.user.findUnique({
         where:{
             email,
@@ -107,7 +108,7 @@ const forgetPassword=async(req:Request,res:Response)=>{
  await prisma.otp.create({
     data:{
         email,
-        otp,
+        otp
     }
  })
  const info = await transporter.sendMail({
@@ -137,6 +138,7 @@ const forgetPassword=async(req:Request,res:Response)=>{
 
 const requestOTP=async(req:Request,res:Response)=>{
     const { email, userOtp, } = req.body;
+    console.log(req.body)
     const user = await prisma.user.findUnique({
         where:{
             email,
@@ -148,8 +150,8 @@ const requestOTP=async(req:Request,res:Response)=>{
         where:{
             otp:Number(userOtp)
         }
-       })
-     if(email==otp?.email){
+       });
+     if(email==otp?.email && userOtp==otp?.otp){
         res.json( {
             code:"OTP_Verified",
             data:null,
@@ -180,9 +182,13 @@ const requestOTP=async(req:Request,res:Response)=>{
 export const user = Router();
 
 user.get("/refresh", fetchUsers);
-user.get("/",findOne)
-user.post("/verify-otp",requestOTP)
-user.patch("/update/:userId",forgetPassword)
+user.get("/",findOne);
+user.post("/update",forgetPassword);
+
+
+
+user.post("/verify-otp",requestOTP);
+
 user.post("/sign-up",signUpController );
 user.post("/sign-in",signinController );
 
