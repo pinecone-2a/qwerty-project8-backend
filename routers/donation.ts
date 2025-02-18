@@ -31,17 +31,18 @@ donationRouter.post("/create-donation", async (req: Request, res: Response) => {
 });
 
 donationRouter.get(
-  "/donation/received/:userId",
+  "/total-earnings/:userId",
   async (req: Request, res: Response) => {
     const { userId } = req.params;
-
     try {
       const donations = await prisma.donation.findMany({
-        where: { recipientId: userId },
-        orderBy: { createdAt: "desc" },
+        where: { recipientId: Number(userId) },
       });
-
-      res.json(donations);
+      const totalEarnings = donations.reduce(
+        (sum, donation) => sum + donation.amount,
+        0
+      );
+      res.json({ earnings: totalEarnings });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "ERROR" });
@@ -61,7 +62,7 @@ donationRouter.get(
 
       const donations = await prisma.donation.findMany({
         where: {
-          recipientId: userId,
+          recipientId: Number(userId),
           createdAt: { gte: last30Days },
         },
       });
@@ -84,7 +85,7 @@ donationRouter.get("/:userId", async (req: Request, res: Response) => {
 
   try {
     const sentDonations = await prisma.donation.findMany({
-      where: { donorId: userId },
+      where: { donorId: Number(userId) },
       orderBy: { createdAt: "desc" },
     });
 
