@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use("/auth",user);
+app.use("/auth/",user);
 app.use("/bankcard", bankcard);
 app.use("/profile", profile);
 
