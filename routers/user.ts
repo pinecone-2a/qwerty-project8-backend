@@ -156,7 +156,7 @@ const requestOTP=async(req:Request,res:Response)=>{
             success:true
          })
      }else{
-        res.json( {
+        res.status(404).send( {
             code:"OTP_INCORRECT",
             data:null,
             message:"OTP IS INCORRECT",
