@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import { prisma } from "../";
 import nodemailer from "nodemailer"
 import { generateAccessToken } from "./generateToken";
+import { verify } from "./verify";
 // import bcrypt from "bcryptjs"
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -88,6 +89,7 @@ const isValid=bcrypt.compareSync(password, isUserExist.password);
 
   };
 const fetchUsers = async (req: Request, res: Response) => {
+    const accessToken=req.body
     
 const users = await prisma.user.findMany({});
 res.json(users);
@@ -117,14 +119,15 @@ const forgetPassword=async(req:Request,res:Response)=>{
     from: '"Buy me coffee" <qteam984@gmail.com>', // sender address
     to: email, // list of receivers
     subject: "Buy me a coffee OTP", // Subject line
-    text:`<div style="max-width:600px;margin:20px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);text-align:center;font-family:Arial,sans-serif;">
+    html:`<div style="max-width:600px;margin:20px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);text-align:center;font-family:Arial,sans-serif;">
     <div style="font-size:24px;font-weight:bold;color:#ff9900;"> ☕ BuyMeCoffee</div>
     <h2>Verify Your Email</h2>
     <p>Use the OTP below to reset your password:</p>
     <div style="font-size:28px;font-weight:bold;color:#333;background:#f8f8f8;padding:10px 20px;display:inline-block;border-radius:5px;margin:20px 0;">${otp}</div>
     <p>If you didn't request this, ignore this email.</p>
-    <div style="font-size:12px;color:#777;margin-top:20px;">&copy; 2025 BuyMeCoffee IronMind. All rights reserved.</div>
-</div>`, // plain text body
+    <div style="font-size:12px;color:#777;margin-top:20px;">&copy; 2025 BuyMeCoffee TeamCtrlZ. All rights reserved.</div>
+</div>
+`, // plain text body
      // html body
   });
  res.json( {
