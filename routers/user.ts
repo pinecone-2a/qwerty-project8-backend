@@ -52,7 +52,7 @@ const hashedPass=bcrypt.hashSync(password,10)
     })
 }
 const signinController = async (req: Request, res: Response) => {
-    const { email, password,userId  } = req.body;
+    const { email, password,user } = req.body;
     const isUserExist=await prisma.user.findUnique({
         where:{
             email,
@@ -66,17 +66,23 @@ const signinController = async (req: Request, res: Response) => {
             data:null
         });return
             }
+
+    
+    const UserId=isUserExist.id
 //isUserExist.password==my pass
 //password==hashed pass
 const isValid=bcrypt.compareSync(password, isUserExist.password);
          if(isValid){
-            const accessToken=generateAccessToken(userId)
+            const refreshToken=jwt.sign({UserId:UserId},process.env.REFRESH_TOKEN_SECRET!,{expiresIn:"24h"})
+            const accessToken=generateAccessToken(UserId)
+            console.log(accessToken)
+            console.log(refreshToken)
             res.json({
                 success:true,
                     message:"Successfully signed up",
                     code:"Signed up",
-                    data:null ,
-                    results:accessToken,
+                    data:isUserExist ,
+                    results:{accessToken,refreshToken,}
             });
             return
          }   
@@ -89,8 +95,21 @@ const isValid=bcrypt.compareSync(password, isUserExist.password);
 
   };
 const fetchUsers = async (req: Request, res: Response) => {
-    const accessToken=req.body
-    
+    const accessToken=req.headers.authorization
+    console.log(accessToken)
+    if( typeof accessToken!="string"){
+        res.status(401).json({                                                                                                   
+            code:"Invaild_Token"
+        })
+        return
+    }
+   try{
+     const payload= jwt.verify(accessToken,process.env.ACCESS_TOKEN_SECRET!)
+   }catch(error){
+    res.status(401).json({
+        code:"Invaild Token"
+    })
+   }
 const users = await prisma.user.findMany({});
 res.json(users);
 };
@@ -193,7 +212,7 @@ const requestOTP=async(req:Request,res:Response)=>{
 
 export const user = Router();
 
-user.get("/refresh", fetchUsers);
+user.get("/refresh",verify, fetchUsers);
 user.get("/",findOne);
 user.post("/update",forgetPassword);
 

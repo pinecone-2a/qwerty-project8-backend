@@ -2,7 +2,9 @@ import jwt from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 
 export const verify = (req: Request, res: Response, next: NextFunction) => {
-  const { accessToken, refreshToken } = req.cookies;
+    const accessToken=req.headers["authorization"]
+    const refreshToken=req.body["refreshToken"]
+//   const { accessToken, refreshToken } = req.cookies;
 
   if (!accessToken && !refreshToken) {
     res.status(401).send("Access Denied. No token provided.");
