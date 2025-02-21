@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 export const donationRouter = Router();
 
-donationRouter.post("/create-donation", async (req: Request, res: Response) => {
+const createDonation = async (req: Request, res: Response) => {
   const {
     amount,
     specialMessage,
@@ -11,9 +11,8 @@ donationRouter.post("/create-donation", async (req: Request, res: Response) => {
     donorId,
     recipientId,
   } = req.body;
-
   try {
-    const donation = await prisma.donation.create({
+    const newDonation = await prisma.donation.create({
       data: {
         amount,
         specialMessage,
@@ -22,78 +21,51 @@ donationRouter.post("/create-donation", async (req: Request, res: Response) => {
         recipientId,
       },
     });
-
-    res.json(donation);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "ERROR" });
+    res.json(newDonation);
+  } catch (e) {
+    res.send(e);
+    console.log(e);
   }
-});
+};
 
-donationRouter.get(
-  "/total-earnings/:userId",
-  async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    try {
-      const donations = await prisma.donation.findMany({
-        where: { recipientId: Number(userId) },
-      });
-      const totalEarnings = donations.reduce(
-        (sum, donation) => sum + donation.amount,
-        0
-      );
-      res.json({ earnings: totalEarnings });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "ERROR" });
-    }
-  }
-);
-
-donationRouter.get(
-  "/total-earnings/:userId",
-  async (req: Request, res: Response) => {
-    const { userId } = req.params;
-
-    try {
-      const today = new Date();
-      const last30Days = new Date();
-      last30Days.setDate(today.getDate() - 30);
-
-      const donations = await prisma.donation.findMany({
-        where: {
-          recipientId: Number(userId),
-          createdAt: { gte: last30Days },
-        },
-      });
-
-      const totalEarnings = donations.reduce(
-        (sum, donation) => sum + donation.amount,
-        0
-      );
-
-      res.json({ earnings: totalEarnings });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "ERROR" });
-    }
-  }
-);
-
-donationRouter.get("/:userId", async (req: Request, res: Response) => {
-  const { userId } = req.params;
-
+const fetchTotalEarnings = async (req: Request, res: Response) => {
+  const id = req.params.userId;
   try {
-    const sentDonations = await prisma.donation.findMany({
-      where: { donorId: Number(userId) },
-      orderBy: { createdAt: "desc" },
+    const donations = await prisma.donation.findMany({
+      where: {
+        recipientId: Number(id),
+      },
     });
+    console.log({ id });
+    const totalEarnings = donations.reduce((total, donation) => {
+      return total + (donation.amount || 0);
+    }, 0);
 
-    res.json(sentDonations);
+    res.json({
+      totalEarnings,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "ERROR" });
+    res.status(500).json({ error: "Failed to fetch total donations" });
   }
-});
+};
+
+const fetchReceivedDonation = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const receivedDonation = await prisma.donation.findMany({
+      where: {
+        recipientId: Number(id),
+      },
+    });
+    res.json(receivedDonation);
+  } catch (error) {
+    console.error("Error fetching donations:", error);
+    res.status(500).json({ error: "Something went wrong", details: error });
+  }
+};
+
+donationRouter.get("/total-earnings/:userId", fetchTotalEarnings);
+donationRouter.get("/:id", fetchReceivedDonation);
+donationRouter.post("/create-donation", createDonation);
 
 export default donationRouter;
