@@ -1,6 +1,9 @@
 import {Request, Response, Router,NextFunction } from "express";
+import jwt from "jsonwebtoken"
 import { prisma } from "../";
 import nodemailer from "nodemailer"
+import { generateAccessToken } from "./generateToken";
+import { verify } from "./verify";
 // import bcrypt from "bcryptjs"
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -11,16 +14,14 @@ const transporter = nodemailer.createTransport({
       pass: "psur zhse xaqp aquu",
     },
   });
-
 const bcrypt = require('bcrypt');
-// const saltRounds = 10;
-// const myPlaintextPassword = 's0/\/\P4$$w0rD';
-// const someOtherPlaintextPassword = 'not_bacon';
-
-const findOne=async (req:Request,res:Response)=>{
-    const oneUser=await prisma.user.findFirst()
-
+const findOne = async (req:Request,res:Response)=>{
+ try{
+    const oneUser = await prisma.user.findFirst();
     res.json(oneUser)
+ } catch(e){
+    throw new Error("Error")
+ }
 }
 const signUpController=async(req:Request,res:Response)=>{
     const { email, password, username } = req.body;
@@ -38,7 +39,6 @@ res.status(202).json({
     }
     // const salt=process.env.Salt
 const hashedPass=bcrypt.hashSync(password,10)
-
     const result=await prisma.user.create({
         data:{
             email:email,
@@ -46,14 +46,13 @@ const hashedPass=bcrypt.hashSync(password,10)
             username: username,
         }
     });res.status(202).json({
-        success:true
-        ,
+        success:true,
         message:"signed up",
         data:result
     })
 }
 const signinController = async (req: Request, res: Response) => {
-    const { email, password,  } = req.body;
+    const { email, password,user } = req.body;
     const isUserExist=await prisma.user.findUnique({
         where:{
             email,
@@ -67,19 +66,27 @@ const signinController = async (req: Request, res: Response) => {
             data:null
         });return
             }
+
+    
+    const UserId=isUserExist.id
 //isUserExist.password==my pass
 //password==hashed pass
 const isValid=bcrypt.compareSync(password, isUserExist.password);
          if(isValid){
+            const refreshToken=jwt.sign({UserId:UserId},process.env.REFRESH_TOKEN_SECRET!,{expiresIn:"24h"})
+            const accessToken=generateAccessToken(UserId)
+            console.log(accessToken)
+            console.log(refreshToken)
             res.json({
                 success:true,
                     message:"Successfully signed up",
                     code:"Signed up",
-                    data:null 
+                    data:isUserExist ,
+                    results:{accessToken,refreshToken,}
             });
             return
          }   
-                res.status(400).json({
+                res.status(404).json({
                     success:false,
                     message:"check your password",
                     code:"password incorrect",
@@ -88,6 +95,21 @@ const isValid=bcrypt.compareSync(password, isUserExist.password);
 
   };
 const fetchUsers = async (req: Request, res: Response) => {
+    const accessToken=req.headers.authorization
+    console.log(accessToken)
+    if( typeof accessToken!="string"){
+        res.status(401).json({                                                                                                   
+            code:"Invaild_Token"
+        })
+        return
+    }
+   try{
+     const payload= jwt.verify(accessToken,process.env.ACCESS_TOKEN_SECRET!)
+   }catch(error){
+    res.status(401).json({
+        code:"Invaild Token"
+    })
+   }
 const users = await prisma.user.findMany({});
 res.json(users);
 };
@@ -95,7 +117,8 @@ res.json(users);
 // forget password
 
 const forgetPassword=async(req:Request,res:Response)=>{
-    const { email, otp, } = req.body;
+    const { email } = req.body;
+
     const user = await prisma.user.findUnique({
         where:{
             email,
@@ -108,14 +131,22 @@ const forgetPassword=async(req:Request,res:Response)=>{
  await prisma.otp.create({
     data:{
         email,
-        otp,
+        otp
     }
  })
  const info = await transporter.sendMail({
     from: '"Buy me coffee" <qteam984@gmail.com>', // sender address
     to: email, // list of receivers
     subject: "Buy me a coffee OTP", // Subject line
-    text:String(otp), // plain text body
+    html:`<div style="max-width:600px;margin:20px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);text-align:center;font-family:Arial,sans-serif;">
+    <div style="font-size:24px;font-weight:bold;color:#ff9900;"> ☕ BuyMeCoffee</div>
+    <h2>Verify Your Email</h2>
+    <p>Use the OTP below to reset your password:</p>
+    <div style="font-size:28px;font-weight:bold;color:#333;background:#f8f8f8;padding:10px 20px;display:inline-block;border-radius:5px;margin:20px 0;">${otp}</div>
+    <p>If you didn't request this, ignore this email.</p>
+    <div style="font-size:12px;color:#777;margin-top:20px;">&copy; 2025 BuyMeCoffee TeamCtrlZ. All rights reserved.</div>
+</div>
+`, // plain text body
      // html body
   });
  res.json( {
@@ -138,6 +169,7 @@ const forgetPassword=async(req:Request,res:Response)=>{
 
 const requestOTP=async(req:Request,res:Response)=>{
     const { email, userOtp, } = req.body;
+    console.log(req.body)
     const user = await prisma.user.findUnique({
         where:{
             email,
@@ -149,8 +181,8 @@ const requestOTP=async(req:Request,res:Response)=>{
         where:{
             otp:Number(userOtp)
         }
-       })
-     if(email==otp?.email){
+       });
+     if(email==otp?.email && userOtp==otp?.otp){
         res.json( {
             code:"OTP_Verified",
             data:null,
@@ -158,7 +190,7 @@ const requestOTP=async(req:Request,res:Response)=>{
             success:true
          })
      }else{
-        res.json( {
+        res.status(404).send( {
             code:"OTP_INCORRECT",
             data:null,
             message:"OTP IS INCORRECT",
@@ -180,10 +212,14 @@ const requestOTP=async(req:Request,res:Response)=>{
 
 export const user = Router();
 
-user.get("/refresh", fetchUsers);
-user.get("/",findOne)
-user.post("/verify-otp",requestOTP)
-user.patch("/update/:userId",forgetPassword)
+user.get("/refresh",verify, fetchUsers);
+user.get("/",findOne);
+user.post("/update",forgetPassword);
+
+
+
+user.post("/verify-otp",requestOTP);
+
 user.post("/sign-up",signUpController );
 user.post("/sign-in",signinController );
 
